@@ -1,0 +1,79 @@
+﻿@page "/create"
+@inject HttpClient HttpCliente
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info">
+        @mensaje
+    </div>
+}
+
+<EditForm Model="@tarea" OnValidSubmit="Guardar">
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+            <h4>Nueva tarea</h4>
+        </div>
+
+        <div class="card-body">
+
+            <div class="mb-3">
+                <label class="form-label">Usuario</label>
+                <InputNumber class="form-control"
+                             @bind-Value="tarea.userId" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Título</label>
+                <InputText class="form-control"
+                           @bind-Value="tarea.title" />
+            </div>
+
+            <div class="form-check mb-3">
+                <InputCheckbox class="form-check-input"
+                               @bind-Value="tarea.completed" />
+                <label class="form-check-label">
+                    Completada
+                </label>
+            </div>
+
+        </div>
+
+        <div class="card-footer text-end">
+
+            <button type="submit" class="btn btn-primary">
+                Guardar
+            </button>
+
+            <button type="reset" class="btn btn-secondary ms-2">
+                Limpiar
+            </button>
+
+        </div>
+
+    </div>
+</EditForm>
+
+@code {
+    private Tarea tarea = new();
+    private string mensaje = "";
+
+    private async Task Guardar()
+    {
+        mensaje = string.Empty; //Se limpia el mensaje
+
+        //Se obtiene la respuesta http
+        HttpResponseMessage respuesta =
+            await HttpCliente.PostAsJsonAsync("todos", tarea);
+
+        //Se define el mensaje a mostrar en la alerta
+        if (respuesta.IsSuccessStatusCode)
+        {
+            mensaje = $"Éxito: {(int)respuesta.StatusCode} {respuesta.StatusCode}";
+        }
+        else
+        {
+            mensaje = $"Error: {(int)respuesta.StatusCode} {respuesta.StatusCode}";
+        }
+    }
+}

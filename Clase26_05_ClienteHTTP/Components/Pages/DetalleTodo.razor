@@ -1,0 +1,30 @@
+﻿@page "/detalle/{id:int}"
+@inject HttpClient HttpCliente
+
+<h2 class="text-center">DetalleTodo</h2>
+<h4>Registro: @id</h4>
+
+@if (tarea == null || HttpCliente == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="card m-3">
+        <div class="card-title p-3">@tarea.title</div>
+        <div class="card-body">Estado: @(tarea.completed ? "Completado" : "Pendiente")</div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    public Tarea tarea { get; set; } = null!;
+
+    //Petición HTTP
+    protected override async Task OnInitializedAsync()
+    {
+        tarea = await HttpCliente.GetFromJsonAsync<Tarea>($"todos/{id}");
+    }
+}

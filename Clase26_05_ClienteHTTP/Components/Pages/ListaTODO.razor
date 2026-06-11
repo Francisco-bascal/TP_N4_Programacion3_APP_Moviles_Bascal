@@ -1,0 +1,185 @@
+﻿@page "/lista-todo"
+@inject HttpClient HttpCliente
+@inject NavigationManager Nav
+
+<h3 class="text-center">Lista de Tareas</h3>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info">
+        @mensaje
+    </div>
+}
+
+@if (ListadoDeTareas.Count == 0 || HttpCliente == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="text-end">
+        <button class="btn btn-primary" @onclick= "Agregar">Agregar</button> <!-- Terminar de implementar -->
+    </div>
+    <table class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tarea in ListadoDeTareas)
+            {
+                <tr>
+                    <td>@tarea.id</td>
+                    <td>@tarea.title</td>
+                    <td>@(tarea.completed ? "Completo" : "Pendiente")</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" @onclick= "() => Editar(tarea.id)">E</button>
+                        <button class="btn btn-sm btn-danger" @onclick= "() => MostrarModal(tarea.id)">B</button>
+                        <button class="btn btn-sm btn-secondary" @onclick= "() => Detallar(tarea.id)">D</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (mostrarModal)
+{
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background-color:rgba(0,0,0,.5);">
+
+        <div class="modal-dialog">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        Confirmar eliminación
+                    </h5>
+                </div>
+
+                <div class="modal-body">
+                    ¿Desea eliminar la tarea con ID
+                    <strong>@idEliminar</strong>?
+                </div>
+
+                <div class="modal-footer">
+
+                    <button class="btn btn-secondary"
+                            @onclick="Cancelar">
+                        Cancelar
+                    </button>
+
+                    <button class="btn btn-danger"
+                            @onclick="Eliminar">
+                        Eliminar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+    private List<Tarea> ListadoDeTareas = new(); //retorno de la petición http
+
+    //atributos necesarios para el cumplimiento de las funciones de eliminación. Que se hacen en esta page al no tener page dedicada (se maneja por modal)
+    private bool mostrarModal = false;
+    private string mensaje = "";
+    private int idEliminar;
+
+    //Carga de la lista de tareas
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ListadoDeTareas = await HttpCliente.GetFromJsonAsync<List<Tarea>>("todos");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message); //log de error
+            ListadoDeTareas = new();
+        }
+
+    }
+
+    //Estos métodos navegan hasta páginas dedicadas que cumplen su función.
+    public void Detallar(int id)
+    {
+        Nav.NavigateTo($"/detalle/{id}"); //interpolando cadena.
+    }
+
+    public void Agregar()
+    {
+        Nav.NavigateTo("/create");
+    }
+
+    public void Editar(int id)
+    {
+        Nav.NavigateTo($"/edit/{id}");    
+    }
+    //Estos métodos navegan hasta páginas dedicadas que cumplen su función.
+
+
+    //Como la eliminación se gestiona por modal y no por página propia. Estos métodos se definen en el listado
+    private void MostrarModal(int id)
+    {
+        mensaje = string.Empty;
+        idEliminar = id;
+        mostrarModal = true;
+    }
+
+    private void Cancelar()
+    {
+        mostrarModal = false;
+    }
+
+    private async Task Eliminar()
+    {
+        //Se obtiene la respuesta http
+        HttpResponseMessage respuesta =
+            await HttpCliente.DeleteAsync($"todos/{idEliminar}");
+
+        //Se define el mensaje a mostrar en la alerta
+        switch (respuesta.StatusCode)
+        {
+            case System.Net.HttpStatusCode.OK:
+                mensaje = "Tarea eliminada correctamente (200 OK)";
+                break;
+
+            case System.Net.HttpStatusCode.NoContent:
+                mensaje = "Tarea eliminada correctamente (204 No Content)";
+                break;
+
+            case System.Net.HttpStatusCode.BadRequest:
+                mensaje = "Solicitud incorrecta (400 Bad Request)";
+                break;
+
+            case System.Net.HttpStatusCode.Unauthorized:
+                mensaje = "No autorizado (401 Unauthorized)";
+                break;
+
+            case System.Net.HttpStatusCode.NotFound:
+                mensaje = "Recurso no encontrado (404 Not Found)";
+                break;
+
+            case System.Net.HttpStatusCode.InternalServerError:
+                mensaje = "Error interno del servidor (500 Internal Server Error)";
+                break;
+
+            default:
+                mensaje = $"Código recibido: {(int)respuesta.StatusCode} - {respuesta.StatusCode}";
+                break;
+        }
+        mostrarModal = false; //para cerrar el modal al confirmar la eliminación
+    }
+}

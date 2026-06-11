@@ -1,0 +1,120 @@
+﻿@page "/edit/{id:int}"
+@inject HttpClient HttpCliente
+@inject NavigationManager Nav
+
+<h3 class="text-center">Editar tarea</h3>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info">
+        @mensaje
+    </div>
+}
+
+@if (tarea == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <EditForm Model="@tarea" OnValidSubmit="Guardar">
+
+        <div class="card shadow">
+
+            <div class="card-header">
+                Editar tarea
+            </div>
+
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label class="form-label">Usuario</label>
+                    <InputNumber class="form-control"
+                                 @bind-Value="tarea.userId" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Título</label>
+                    <InputText class="form-control"
+                               @bind-Value="tarea.title" />
+                </div>
+
+                <div class="form-check mb-3">
+                    <InputCheckbox class="form-check-input"
+                                   @bind-Value="tarea.completed" />
+                    <label class="form-check-label">
+                        Completada
+                    </label>
+                </div>
+
+            </div>
+
+            <div class="card-footer text-end">
+
+                <button type="submit" class="btn btn-primary">
+                    Guardar cambios
+                </button>
+
+            </div>
+
+        </div>
+
+    </EditForm>
+}
+
+@code {
+
+    [Parameter]
+    public int id { get; set; }
+
+    private Tarea? tarea;
+
+    private string mensaje = "";
+
+    //Se obtienen los datos del registro a editar
+    protected override async Task OnInitializedAsync()
+    {
+        tarea = await HttpCliente.GetFromJsonAsync<Tarea>($"todos/{id}");
+    }
+
+    private async Task Guardar()
+    {
+        mensaje = string.Empty; //Se limpia el mensaje
+
+        //Se obtiene la respuesta http
+        HttpResponseMessage respuesta =
+            await HttpCliente.PutAsJsonAsync($"todos/{id}", tarea);
+
+        //Se define el mensaje a mostrar en la alerta
+        switch (respuesta.StatusCode)
+        {
+            case System.Net.HttpStatusCode.OK:
+                mensaje = "Tarea modificada correctamente (200 OK)";
+                break;
+
+            case System.Net.HttpStatusCode.Created:
+                mensaje = "Recurso creado (201 Created)";
+                break;
+
+            case System.Net.HttpStatusCode.BadRequest:
+                mensaje = "Solicitud incorrecta (400 Bad Request)";
+                break;
+
+            case System.Net.HttpStatusCode.Unauthorized:
+                mensaje = "No autorizado (401 Unauthorized)";
+                break;
+
+            case System.Net.HttpStatusCode.NotFound:
+                mensaje = "Recurso no encontrado (404 Not Found)";
+                break;
+
+            case System.Net.HttpStatusCode.InternalServerError:
+                mensaje = "Error interno del servidor (500 Internal Server Error)";
+                break;
+
+            default:
+                mensaje = $"Código recibido: {(int)respuesta.StatusCode} - {respuesta.StatusCode}";
+                break;
+        }
+    }
+}
