@@ -86,35 +86,13 @@ else
             await HttpCliente.PutAsJsonAsync($"todos/{id}", tarea);
 
         //Se define el mensaje a mostrar en la alerta
-        switch (respuesta.StatusCode)
+        if (respuesta.IsSuccessStatusCode) //Si es un código 2XX
         {
-            case System.Net.HttpStatusCode.OK:
-                mensaje = "Tarea modificada correctamente (200 OK)";
-                break;
-
-            case System.Net.HttpStatusCode.Created:
-                mensaje = "Recurso creado (201 Created)";
-                break;
-
-            case System.Net.HttpStatusCode.BadRequest:
-                mensaje = "Solicitud incorrecta (400 Bad Request)";
-                break;
-
-            case System.Net.HttpStatusCode.Unauthorized:
-                mensaje = "No autorizado (401 Unauthorized)";
-                break;
-
-            case System.Net.HttpStatusCode.NotFound:
-                mensaje = "Recurso no encontrado (404 Not Found)";
-                break;
-
-            case System.Net.HttpStatusCode.InternalServerError:
-                mensaje = "Error interno del servidor (500 Internal Server Error)";
-                break;
-
-            default:
-                mensaje = $"Código recibido: {(int)respuesta.StatusCode} - {respuesta.StatusCode}";
-                break;
+            mensaje = $"Éxito: {(int)respuesta.StatusCode} {respuesta.StatusCode}";
+        }
+        else
+        {
+            mensaje = $"Error: {(int)respuesta.StatusCode} {respuesta.StatusCode}";
         }
     }
 }

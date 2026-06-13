@@ -67,7 +67,7 @@
             await HttpCliente.PostAsJsonAsync("todos", tarea);
 
         //Se define el mensaje a mostrar en la alerta
-        if (respuesta.IsSuccessStatusCode)
+        if (respuesta.IsSuccessStatusCode) //Si es un código 2XX
         {
             mensaje = $"Éxito: {(int)respuesta.StatusCode} {respuesta.StatusCode}";
         }

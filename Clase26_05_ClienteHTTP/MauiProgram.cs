@@ -18,7 +18,7 @@ namespace Clase26_05_ClienteHTTP
 
             builder.Services.AddScoped(sp => new HttpClient
             {
-                BaseAddress = new Uri("https://jsonplaceholder.typicode.com/")
+                BaseAddress = new Uri("https://jsonplaceholder.typicode.com/") //Ruta base para las peticiones con el servicio api
             });
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
